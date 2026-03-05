@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/assets/fonts/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sora";
+  src: url("/assets/fonts/Sora-Variable.woff2") format("woff2");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cabinet Grotesk";
+  src: url("/assets/fonts/CabinetGrotesk-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.375rem;
+
+    /* Dark vault theme — deep slate with electric cyan accents */
+    --background: 0.14 0.012 252;
+    --foreground: 0.93 0.015 240;
+    --card: 0.17 0.014 252;
+    --card-foreground: 0.93 0.015 240;
+    --popover: 0.19 0.016 252;
+    --popover-foreground: 0.93 0.015 240;
+
+    /* Electric cyan primary */
+    --primary: 0.72 0.15 200;
+    --primary-foreground: 0.10 0.012 252;
+
+    --secondary: 0.22 0.018 252;
+    --secondary-foreground: 0.85 0.015 240;
+
+    --muted: 0.20 0.015 252;
+    --muted-foreground: 0.55 0.015 240;
+
+    --accent: 0.24 0.02 252;
+    --accent-foreground: 0.93 0.015 240;
+
+    --destructive: 0.60 0.22 25;
+    --destructive-foreground: 0.97 0.01 240;
+
+    /* Status colors */
+    --verified: 0.68 0.18 152;
+    --verified-foreground: 0.97 0.01 240;
+    --rejected: 0.60 0.22 25;
+    --rejected-foreground: 0.97 0.01 240;
+    --compromised: 0.72 0.18 60;
+    --compromised-foreground: 0.10 0.01 240;
+
+    --border: 0.28 0.018 252;
+    --input: 0.22 0.016 252;
+    --ring: 0.72 0.15 200;
+
+    --chart-1: 0.72 0.15 200;
+    --chart-2: 0.68 0.18 152;
+    --chart-3: 0.72 0.18 60;
+    --chart-4: 0.60 0.22 25;
+    --chart-5: 0.65 0.16 290;
+
+    --sidebar: 0.12 0.014 252;
+    --sidebar-foreground: 0.85 0.015 240;
+    --sidebar-primary: 0.72 0.15 200;
+    --sidebar-primary-foreground: 0.10 0.012 252;
+    --sidebar-accent: 0.20 0.016 252;
+    --sidebar-accent-foreground: 0.85 0.015 240;
+    --sidebar-border: 0.22 0.015 252;
+    --sidebar-ring: 0.72 0.15 200;
+
+    /* Glow effect */
+    --glow-cyan: oklch(0.72 0.15 200 / 0.25);
+    --glow-cyan-strong: oklch(0.72 0.15 200 / 0.5);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Sora", sans-serif;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: oklch(var(--background));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(var(--border));
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(var(--muted-foreground));
+  }
+}
+
+@layer utilities {
+  .font-mono-data {
+    font-family: "Geist Mono", monospace;
+    font-size: 0.75rem;
+    letter-spacing: -0.01em;
+  }
+  .text-glow-cyan {
+    text-shadow: 0 0 12px var(--glow-cyan-strong), 0 0 30px var(--glow-cyan);
+  }
+  .border-glow-cyan {
+    box-shadow: 0 0 0 1px oklch(var(--ring) / 0.5), 0 0 12px var(--glow-cyan);
+  }
+  .bg-grid-pattern {
+    background-image:
+      linear-gradient(oklch(var(--border) / 0.15) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(var(--border) / 0.15) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .status-verified {
+    @apply bg-[oklch(0.68_0.18_152/0.15)] text-[oklch(0.75_0.18_152)] border border-[oklch(0.68_0.18_152/0.4)];
+  }
+  .status-rejected {
+    @apply bg-[oklch(0.60_0.22_25/0.15)] text-[oklch(0.72_0.22_25)] border border-[oklch(0.60_0.22_25/0.4)];
+  }
+  .status-compromised {
+    @apply bg-[oklch(0.72_0.18_60/0.15)] text-[oklch(0.75_0.18_60)] border border-[oklch(0.72_0.18_60/0.4)];
+  }
+}

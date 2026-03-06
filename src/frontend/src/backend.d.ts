@@ -59,6 +59,7 @@ export interface backendInterface {
         token?: string;
         proofMissing?: ProofMissing;
     }>;
+    getTrainingUrl(): Promise<string | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;

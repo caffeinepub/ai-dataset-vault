@@ -141,5 +141,18 @@ export function useExternalTrainingLink(datasetId: bigint | null) {
   });
 }
 
+// ── Query: Get training URL ───────────────────────────────────────────────────
+export function useTrainingUrl() {
+  const { actor, isFetching } = useActor();
+  return useQuery<string | null>({
+    queryKey: ["trainingUrl"],
+    queryFn: async () => {
+      if (!actor) return null;
+      return actor.getTrainingUrl();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
 // Re-export Metrics type for convenience
 export type { Metrics };

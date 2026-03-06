@@ -10,6 +10,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -27,19 +34,27 @@ import {
 } from "@/components/ui/tooltip";
 import {
   ChevronDown,
+  ChevronDown as ChevronDownIcon,
   Clock,
   Cpu,
   Database,
+  ExternalLink,
   Loader2,
   Trash2,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import type { Dataset } from "../backend.d";
 import { DatasetStatus } from "../backend.d";
+import { ExternalTrainingModal } from "../components/ExternalTrainingModal";
 import { HashDisplay } from "../components/HashDisplay";
 import { StatusBadge } from "../components/StatusBadge";
-import { useDatasets, useDeleteDataset } from "../hooks/useQueries";
+import {
+  useDatasets,
+  useDeleteDataset,
+  useTrainingUrl,
+} from "../hooks/useQueries";
 
 interface DatasetsPageProps {
   onTrainClick: (datasetId: bigint) => void;
@@ -48,8 +63,12 @@ interface DatasetsPageProps {
 export function DatasetsPage({ onTrainClick }: DatasetsPageProps) {
   const { data: datasets, isLoading } = useDatasets();
   const { mutateAsync: deleteDataset } = useDeleteDataset();
+  const { data: trainingUrl } = useTrainingUrl();
   const [deletingId, setDeletingId] = useState<bigint | null>(null);
   const [expandedId, setExpandedId] = useState<bigint | null>(null);
+  const [externalModalDataset, setExternalModalDataset] =
+    useState<Dataset | null>(null);
+  const [externalModalOpen, setExternalModalOpen] = useState(false);
 
   const handleDelete = async (id: bigint) => {
     setDeletingId(id);
@@ -61,6 +80,16 @@ export function DatasetsPage({ onTrainClick }: DatasetsPageProps) {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handleExternalTrain = (dataset: Dataset) => {
+    const url = trainingUrl?.trim();
+    if (!url) {
+      toast.error("Set a training platform URL on the Training URL page first");
+      return;
+    }
+    setExternalModalDataset(dataset);
+    setExternalModalOpen(true);
   };
 
   const formatDate = (createdAt: bigint) => {
@@ -198,26 +227,69 @@ export function DatasetsPage({ onTrainClick }: DatasetsPageProps) {
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => e.stopPropagation()}
                         >
+                          {/* Train Model Dropdown */}
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  disabled={
-                                    ds.status !== DatasetStatus.verified
-                                  }
-                                  onClick={() => onTrainClick(ds.id)}
-                                  className={`border-border text-xs h-7 px-2.5 ${
-                                    ds.status === DatasetStatus.verified
-                                      ? "hover:border-primary/50 hover:text-primary"
-                                      : "opacity-50"
-                                  }`}
-                                  data-ocid={`datasets.train_button.${idx + 1}`}
-                                >
-                                  <Cpu className="w-3.5 h-3.5 mr-1" />
-                                  Train
-                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      disabled={
+                                        ds.status !== DatasetStatus.verified
+                                      }
+                                      className={`border-border text-xs h-7 px-2.5 gap-1 ${
+                                        ds.status === DatasetStatus.verified
+                                          ? "hover:border-primary/50 hover:text-primary"
+                                          : "opacity-50"
+                                      }`}
+                                      data-ocid={`datasets.train_dropdown.${idx + 1}`}
+                                    >
+                                      <Cpu className="w-3.5 h-3.5" />
+                                      <span className="hidden sm:inline">
+                                        Train Model
+                                      </span>
+                                      <ChevronDownIcon className="w-3 h-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align="end"
+                                    className="bg-popover border-border text-foreground w-52"
+                                  >
+                                    <DropdownMenuItem
+                                      data-ocid={`datasets.train_inside_button.${idx + 1}`}
+                                      className="flex items-center gap-2 cursor-pointer text-xs focus:bg-accent focus:text-accent-foreground"
+                                      onClick={() => onTrainClick(ds.id)}
+                                    >
+                                      <Cpu className="w-3.5 h-3.5 text-primary shrink-0" />
+                                      <div>
+                                        <p className="font-medium">
+                                          Train Inside Platform
+                                        </p>
+                                        <p className="text-muted-foreground text-[10px]">
+                                          SHA-256 integrity verified
+                                        </p>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-border" />
+                                    <DropdownMenuItem
+                                      data-ocid={`datasets.train_external_button.${idx + 1}`}
+                                      className="flex items-center gap-2 cursor-pointer text-xs focus:bg-accent focus:text-accent-foreground"
+                                      onClick={() => handleExternalTrain(ds)}
+                                    >
+                                      <ExternalLink className="w-3.5 h-3.5 text-[oklch(0.68_0.18_152)] shrink-0" />
+                                      <div>
+                                        <p className="font-medium">
+                                          Train Using External Platform
+                                        </p>
+                                        <p className="text-muted-foreground text-[10px]">
+                                          Opens in new tab
+                                        </p>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </span>
                             </TooltipTrigger>
                             {ds.status !== DatasetStatus.verified && (
@@ -306,6 +378,13 @@ export function DatasetsPage({ onTrainClick }: DatasetsPageProps) {
           )}
         </motion.div>
       </div>
+      {/* External Training Verification Modal */}
+      <ExternalTrainingModal
+        dataset={externalModalDataset}
+        trainingUrl={trainingUrl ?? ""}
+        open={externalModalOpen}
+        onOpenChange={setExternalModalOpen}
+      />
     </TooltipProvider>
   );
 }

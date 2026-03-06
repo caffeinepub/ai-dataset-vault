@@ -4,6 +4,8 @@ import {
   CheckCircle,
   Clock,
   Database,
+  ExternalLink,
+  Globe,
   TrendingUp,
   XCircle,
 } from "lucide-react";
@@ -216,6 +218,34 @@ export function DashboardPage() {
             ))}
           </div>
         )}
+      </motion.div>
+
+      {/* External Training Quick Action Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+        className="border border-primary/20 bg-primary/5 rounded-lg p-4 flex items-start gap-4"
+      >
+        <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+          <Globe className="w-4 h-4 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm font-semibold text-foreground">
+              Train Using External Platform
+            </span>
+            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Connect HuggingFace, Google Colab, AWS SageMaker, or any AI training
+            platform. Go to{" "}
+            <span className="text-primary font-medium">Training URL</span> to
+            configure your external platform, then use{" "}
+            <span className="text-primary font-medium">My Datasets</span> to
+            launch verified datasets directly into your chosen platform.
+          </p>
+        </div>
       </motion.div>
     </div>
   );

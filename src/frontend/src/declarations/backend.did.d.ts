@@ -80,6 +80,7 @@ export interface _SERVICE {
       'proofMissing' : [] | [ProofMissing],
     }
   >,
+  'getTrainingUrl' : ActorMethod<[], [] | [string]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,

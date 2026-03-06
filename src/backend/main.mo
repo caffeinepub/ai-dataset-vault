@@ -1,13 +1,13 @@
-import Text "mo:core/Text";
-import Iter "mo:core/Iter";
-import Map "mo:core/Map";
-import Time "mo:core/Time";
 import Nat "mo:core/Nat";
+import Map "mo:core/Map";
+import Text "mo:core/Text";
 import Float "mo:core/Float";
-import Option "mo:core/Option";
-import Principal "mo:core/Principal";
+import Iter "mo:core/Iter";
 import Order "mo:core/Order";
+import Time "mo:core/Time";
+import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
@@ -31,10 +31,7 @@ actor {
   include MixinAuthorization(accessControlState);
 
   // User profiles
-  public type UserProfile = {
-    name : Text;
-  };
-
+  public type UserProfile = { name : Text };
   let userProfiles = Map.empty<Principal, UserProfile>();
 
   type Dataset = {
@@ -182,8 +179,8 @@ actor {
   };
 
   public shared ({ caller }) func setExternalTrainingUrl(url : Text) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Admin access required");
+    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+      Runtime.trap("Unauthorized: User access required");
     };
     trainingUrl := ?url;
     trainingToken := ?url.concat("TOKEN_SUFFIX");
@@ -254,5 +251,13 @@ actor {
         datasets.remove(id);
       };
     };
+  };
+
+  // NEW FUNCTION - must return current training URL for users only
+  public query ({ caller }) func getTrainingUrl() : async ?Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access training URL");
+    };
+    trainingUrl;
   };
 };

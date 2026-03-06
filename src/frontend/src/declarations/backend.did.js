@@ -97,6 +97,7 @@ export const idlService = IDL.Service({
       ],
       ['query'],
     ),
+  'getTrainingUrl' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -222,6 +223,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'getTrainingUrl' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],

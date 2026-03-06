@@ -4,32 +4,30 @@ import {
   Cpu,
   Database,
   LayoutDashboard,
+  Link,
   Loader2,
   LogIn,
   LogOut,
   Menu,
   Shield,
-  ShieldAlert,
   Upload,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
-import { useIsAdmin } from "./hooks/useQueries";
-import { AdminPage } from "./pages/AdminPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { DatasetsPage } from "./pages/DatasetsPage";
 import { TrainPage } from "./pages/TrainPage";
+import { TrainingUrlPage } from "./pages/TrainingUrlPage";
 import { UploadPage } from "./pages/UploadPage";
 
-type Page = "dashboard" | "upload" | "datasets" | "train" | "admin";
+type Page = "dashboard" | "upload" | "datasets" | "train" | "training-url";
 
 interface NavItem {
   id: Page;
   label: string;
   icon: React.ReactNode;
-  adminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -50,10 +48,9 @@ const navItems: NavItem[] = [
   },
   { id: "train", label: "Train Model", icon: <Cpu className="w-4 h-4" /> },
   {
-    id: "admin",
-    label: "External Training",
-    icon: <ShieldAlert className="w-4 h-4" />,
-    adminOnly: false,
+    id: "training-url",
+    label: "Training URL",
+    icon: <Link className="w-4 h-4" />,
   },
 ];
 
@@ -126,7 +123,6 @@ function LoginGate() {
 
 export default function App() {
   const { identity, clear, isInitializing } = useInternetIdentity();
-  const { data: isAdmin } = useIsAdmin();
   const [currentPage, setCurrentPage] = useState<Page>("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [trainDatasetId, setTrainDatasetId] = useState<bigint | null>(null);
@@ -164,7 +160,7 @@ export default function App() {
     if (page !== "train") setTrainDatasetId(null);
   };
 
-  const visibleNavItems = navItems.filter((item) => !item.adminOnly || isAdmin);
+  const visibleNavItems = navItems;
   const principalStr = identity.getPrincipal().toString();
   const shortPrincipal = `${principalStr.slice(0, 5)}...${principalStr.slice(-4)}`;
 
@@ -201,7 +197,7 @@ export default function App() {
                         ? "nav.datasets_link"
                         : item.id === "train"
                           ? "nav.train_link"
-                          : "nav.admin_link"
+                          : "nav.training_url_link"
                 }
                 className={`
                   flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-all
@@ -224,13 +220,6 @@ export default function App() {
             <span className="hidden sm:block text-xs font-mono text-muted-foreground bg-muted/50 px-2 py-1 rounded border border-border">
               {shortPrincipal}
             </span>
-
-            {isAdmin && (
-              <span className="hidden sm:flex items-center gap-1 text-xs font-mono text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded">
-                <ShieldAlert className="w-3 h-3" />
-                Admin
-              </span>
-            )}
 
             <Button
               data-ocid="auth.logout_button"
@@ -283,7 +272,7 @@ export default function App() {
                           ? "nav.datasets_link"
                           : item.id === "train"
                             ? "nav.train_link"
-                            : "nav.admin_link"
+                            : "nav.training_url_link"
                   }
                   className={`
                     flex items-center gap-2 w-full px-3 py-2.5 rounded text-sm font-medium transition-all mb-1
@@ -321,7 +310,7 @@ export default function App() {
             {currentPage === "train" && (
               <TrainPage preselectedDatasetId={trainDatasetId} />
             )}
-            {currentPage === "admin" && <AdminPage />}
+            {currentPage === "training-url" && <TrainingUrlPage />}
           </motion.div>
         </AnimatePresence>
       </main>

@@ -152,6 +152,7 @@ export interface backendInterface {
         token?: string;
         proofMissing?: ProofMissing;
     }>;
+    getTrainingUrl(): Promise<string | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
@@ -369,6 +370,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getExternalTrainingLink(arg0);
             return from_candid_record_n20(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getTrainingUrl(): Promise<string | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTrainingUrl();
+                return from_candid_opt_n18(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTrainingUrl();
+            return from_candid_opt_n18(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {

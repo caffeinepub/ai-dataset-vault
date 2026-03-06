@@ -19,15 +19,19 @@ import {
   BarChart3,
   Cpu,
   Loader2,
+  Shield,
+  ShieldCheck,
   Target,
   Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { DatasetStatus } from "../backend.d";
 import { useDatasets, useTrainModel } from "../hooks/useQueries";
 import type { Metrics } from "../hooks/useQueries";
+
+type VerifyPhase = "idle" | "verifying" | "verified" | "failed";
 
 interface MetricCardProps {
   label: string;
@@ -91,6 +95,21 @@ export function TrainPage({ preselectedDatasetId }: TrainPageProps) {
   );
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [compromised, setCompromised] = useState(false);
+  const [verifyPhase, setVerifyPhase] = useState<VerifyPhase>("idle");
+
+  // When a new training attempt starts, clear previous results
+  const resetState = () => {
+    setMetrics(null);
+    setCompromised(false);
+    setVerifyPhase("idle");
+  };
+
+  // Transition from verified phase to showing metrics after delay
+  useEffect(() => {
+    if (verifyPhase === "verified" && metrics) {
+      // metrics are already set, just let animation play — no extra delay needed
+    }
+  }, [verifyPhase, metrics]);
 
   const verifiedDatasets =
     datasets?.filter((d) => d.status === DatasetStatus.verified) ?? [];
@@ -101,21 +120,27 @@ export function TrainPage({ preselectedDatasetId }: TrainPageProps) {
       return;
     }
 
-    setMetrics(null);
-    setCompromised(false);
+    resetState();
+    setVerifyPhase("verifying");
 
     try {
       const result = await trainModel(BigInt(selectedId));
       const firstMetric = result.metrics[0] ?? null;
 
       if (!firstMetric) {
+        setVerifyPhase("failed");
         setCompromised(true);
         toast.error("Dataset integrity compromised — training blocked");
       } else {
-        setMetrics(firstMetric);
-        toast.success("Model training complete");
+        setVerifyPhase("verified");
+        // Slight delay so the verified badge is visible before metrics appear
+        setTimeout(() => {
+          setMetrics(firstMetric);
+          toast.success("Model training complete");
+        }, 500);
       }
     } catch (err) {
+      setVerifyPhase("failed");
       toast.error(err instanceof Error ? err.message : "Training failed");
     }
   };
@@ -228,21 +253,91 @@ export function TrainPage({ preselectedDatasetId }: TrainPageProps) {
               </TooltipContent>
             )}
           </Tooltip>
+        </motion.div>
 
-          {isPending && (
+        {/* Security Verification Panel */}
+        <AnimatePresence mode="wait">
+          {verifyPhase === "verifying" && (
             <motion.div
-              data-ocid="train.loading_state"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center justify-center gap-3 py-4"
+              key="verifying"
+              data-ocid="train.security_check_panel"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="bg-card border border-primary/30 rounded-lg p-6"
             >
-              <Loader2 className="w-5 h-5 text-primary animate-spin" />
-              <span className="text-sm text-muted-foreground font-mono">
-                Running integrity checks and training model...
-              </span>
+              <div className="flex items-center gap-4">
+                <div className="relative shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="absolute -inset-1 rounded-full border border-primary/20 animate-ping" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                    <span className="text-sm font-semibold text-foreground font-mono">
+                      Verifying SHA-256 integrity...
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Comparing on-chain hash with dataset hash
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 h-1 bg-muted rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: "0%" }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 2, ease: "easeInOut" }}
+                  className="h-full bg-primary rounded-full"
+                />
+              </div>
             </motion.div>
           )}
-        </motion.div>
+
+          {verifyPhase === "verified" && (
+            <motion.div
+              key="verified"
+              data-ocid="train.integrity_verified"
+              initial={{ opacity: 0, scale: 0.97, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.35 }}
+              className="bg-[oklch(0.68_0.18_152/0.08)] border border-[oklch(0.68_0.18_152/0.4)] rounded-lg p-5"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[oklch(0.68_0.18_152/0.15)] border border-[oklch(0.68_0.18_152/0.4)] flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-[oklch(0.75_0.18_152)]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[oklch(0.75_0.18_152)]">
+                    SHA-256 Hash Verified
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Integrity confirmed — training authorized
+                  </p>
+                </div>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 15,
+                    delay: 0.1,
+                  }}
+                  className="ml-auto"
+                >
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full status-verified">
+                    PASSED
+                  </span>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Compromised Alert */}
         <AnimatePresence>

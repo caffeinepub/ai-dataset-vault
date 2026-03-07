@@ -59,15 +59,6 @@ export function ExternalTrainingModal({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleLaunch = () => {
-    if (!launchUrl) {
-      toast.error("No training platform URL configured");
-      return;
-    }
-    window.open(launchUrl, "_blank", "noopener,noreferrer");
-    onOpenChange(false);
-  };
-
   const handleDownload = () => {
     const a = document.createElement("a");
     a.href = datasetDirectUrl;
@@ -283,22 +274,30 @@ export function ExternalTrainingModal({
           >
             Cancel
           </Button>
-          {isVerified && (
-            <Button
-              onClick={handleLaunch}
-              disabled={!platformUrl}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
-              data-ocid="external_training.launch_button"
-              title={
-                !platformUrl
-                  ? "Set a training platform URL on the Training URL page first"
-                  : `Launch ${platformUrl}`
-              }
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              {platformUrl ? "Launch External Platform" : "No URL Configured"}
-            </Button>
-          )}
+          {isVerified &&
+            (platformUrl ? (
+              <a
+                href={launchUrl ?? "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-ocid="external_training.launch_button"
+                onClick={() => onOpenChange(false)}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-sm h-9 px-4 py-2 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Launch External Platform
+              </a>
+            ) : (
+              <Button
+                disabled
+                className="bg-primary/50 text-primary-foreground font-medium"
+                data-ocid="external_training.launch_button"
+                title="Set a training platform URL on the Training URL page first"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                No URL Configured
+              </Button>
+            ))}
         </DialogFooter>
       </DialogContent>
     </Dialog>

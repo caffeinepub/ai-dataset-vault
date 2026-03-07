@@ -57,9 +57,11 @@ export function useCallerRole() {
 
 // ── Mutation: Upload dataset ─────────────────────────────────────────────────
 export function useUploadDataset() {
-  const { actor } = useActor();
+  const { actor, isFetching: isActorFetching } = useActor();
+  const isActorLoading = isActorFetching;
+  const isActorReady = !!actor;
   const queryClient = useQueryClient();
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({
       name,
       file,
@@ -69,7 +71,10 @@ export function useUploadDataset() {
       file: File;
       onProgress?: (pct: number) => void;
     }) => {
-      if (!actor) throw new Error("Not connected");
+      if (!actor)
+        throw new Error(
+          "Not connected to backend. Please refresh the page and try again.",
+        );
       const bytes = new Uint8Array(await file.arrayBuffer());
       let blob = ExternalBlob.fromBytes(bytes);
       if (onProgress) {
@@ -81,6 +86,7 @@ export function useUploadDataset() {
       void queryClient.invalidateQueries({ queryKey: ["datasets"] });
     },
   });
+  return { ...mutation, isActorLoading, isActorReady };
 }
 
 // ── Mutation: Train model ────────────────────────────────────────────────────
@@ -149,6 +155,20 @@ export function useTrainingUrl() {
     queryFn: async () => {
       if (!actor) return null;
       return actor.getTrainingUrl();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ── Query: Get audit log ──────────────────────────────────────────────────────
+export function useAuditLog() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ["auditLog"],
+    queryFn: async () => {
+      if (!actor) return [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (actor as any).getAuditLog();
     },
     enabled: !!actor && !isFetching,
   });

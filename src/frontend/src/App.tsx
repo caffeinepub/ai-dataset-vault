@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import {
   Cpu,
   Database,
+  FileText,
   LayoutDashboard,
   Link,
   Loader2,
@@ -16,13 +17,20 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
+import { AuditLogPage } from "./pages/AuditLogPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { DatasetsPage } from "./pages/DatasetsPage";
 import { TrainPage } from "./pages/TrainPage";
 import { TrainingUrlPage } from "./pages/TrainingUrlPage";
 import { UploadPage } from "./pages/UploadPage";
 
-type Page = "dashboard" | "upload" | "datasets" | "train" | "training-url";
+type Page =
+  | "dashboard"
+  | "upload"
+  | "datasets"
+  | "train"
+  | "training-url"
+  | "audit-log";
 
 interface NavItem {
   id: Page;
@@ -52,7 +60,29 @@ const navItems: NavItem[] = [
     label: "Training URL",
     icon: <Link className="w-4 h-4" />,
   },
+  {
+    id: "audit-log",
+    label: "Audit Log",
+    icon: <FileText className="w-4 h-4" />,
+  },
 ];
+
+function getOcid(id: Page): string {
+  switch (id) {
+    case "dashboard":
+      return "nav.dashboard_link";
+    case "upload":
+      return "nav.upload_button";
+    case "datasets":
+      return "nav.datasets_link";
+    case "train":
+      return "nav.train_link";
+    case "training-url":
+      return "nav.training_url_link";
+    case "audit-log":
+      return "nav.audit_log_link";
+  }
+}
 
 function LoginGate() {
   const { login, isLoggingIn } = useInternetIdentity();
@@ -74,10 +104,10 @@ function LoginGate() {
           </div>
           <div>
             <h1 className="text-3xl font-bold font-display text-foreground">
-              AI Dataset Vault
+              SecureChain AI
             </h1>
             <p className="text-muted-foreground text-sm mt-2">
-              Secure on-chain dataset management for AI training
+              AI-validated, blockchain-secured dataset management
             </p>
           </div>
         </div>
@@ -112,7 +142,7 @@ function LoginGate() {
           ) : (
             <>
               <LogIn className="w-5 h-5 mr-2" />
-              Sign In to Access Vault
+              Sign In to SecureChain AI
             </>
           )}
         </Button>
@@ -133,7 +163,7 @@ export default function App() {
         <div className="flex flex-col items-center gap-4">
           <Shield className="w-10 h-10 text-primary animate-pulse text-glow-cyan" />
           <span className="text-muted-foreground text-sm font-mono">
-            Initializing vault...
+            Initializing SecureChain AI...
           </span>
         </div>
       </div>
@@ -177,7 +207,7 @@ export default function App() {
               <Shield className="w-4 h-4 text-primary text-glow-cyan" />
             </div>
             <span className="font-bold font-display text-foreground text-sm hidden sm:block">
-              AI Dataset Vault
+              SecureChain AI
             </span>
           </div>
 
@@ -188,17 +218,7 @@ export default function App() {
                 type="button"
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                data-ocid={
-                  item.id === "dashboard"
-                    ? "nav.dashboard_link"
-                    : item.id === "upload"
-                      ? "nav.upload_button"
-                      : item.id === "datasets"
-                        ? "nav.datasets_link"
-                        : item.id === "train"
-                          ? "nav.train_link"
-                          : "nav.training_url_link"
-                }
+                data-ocid={getOcid(item.id)}
                 className={`
                   flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-all
                   ${
@@ -263,17 +283,7 @@ export default function App() {
                   type="button"
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
-                  data-ocid={
-                    item.id === "dashboard"
-                      ? "nav.dashboard_link"
-                      : item.id === "upload"
-                        ? "nav.upload_button"
-                        : item.id === "datasets"
-                          ? "nav.datasets_link"
-                          : item.id === "train"
-                            ? "nav.train_link"
-                            : "nav.training_url_link"
-                  }
+                  data-ocid={getOcid(item.id)}
                   className={`
                     flex items-center gap-2 w-full px-3 py-2.5 rounded text-sm font-medium transition-all mb-1
                     ${
@@ -311,6 +321,7 @@ export default function App() {
               <TrainPage preselectedDatasetId={trainDatasetId} />
             )}
             {currentPage === "training-url" && <TrainingUrlPage />}
+            {currentPage === "audit-log" && <AuditLogPage />}
           </motion.div>
         </AnimatePresence>
       </main>
